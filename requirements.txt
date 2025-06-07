@@ -21,3 +21,4 @@ SQLAlchemy
 toml 
 six
 qdrant-client
+dotenv

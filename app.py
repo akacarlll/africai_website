@@ -1,10 +1,10 @@
 import streamlit as st
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from typing import Dict, Any
 
 
-load_dotenv()
+# load_dotenv()
 def get_retriever_sidebar_params(retriever_type: str):
     """Generate retriever-specific parameters in sidebar and return them explicitly"""
 
