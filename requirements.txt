@@ -1,19 +1,18 @@
 
-streamlit==1.28.0
-streamlit-chat==0.1.1
-chromadb==0.4.18
-openai==1.3.0
-anthropic==0.8.0
+streamlit
+streamlit-chat
+chromadb
+openai
+anthropic
 langchain
 langchain-openai
 langchain_core
 langchain_community
 pandas
 numpy
-python-dotenv==1.0.0
-requests==2.31.0
-pydantic==2.5.0
-loguru==0.7.2
+requests
+pydantic
+loguru
 rapidfuzz
 python-dotenv
 faiss-cpu
@@ -21,3 +20,4 @@ urllib3
 SQLAlchemy
 toml 
 six
+qdrant-client
