@@ -15,3 +15,9 @@ requests==2.31.0
 pydantic==2.5.0
 loguru==0.7.2
 rapidfuzz
+python-dotenv
+faiss-cpu
+urllib3
+SQLAlchemy
+toml 
+six
