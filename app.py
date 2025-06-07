@@ -173,7 +173,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 def main():
-    st.markdown('<h1 class="main-header">⚖️ Legal Document RAG System</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">⚖️ AfricAI the Legal IA</h1>', unsafe_allow_html=True)
     with st.sidebar:
         st.header("🔍 Search Options")
         doc_types = st.multiselect(
