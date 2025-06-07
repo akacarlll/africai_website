@@ -1,0 +1,49 @@
+from enum import Enum
+from typing import Dict, Any, List
+from dataclasses import dataclass
+
+class DocumentType(Enum):
+    """Supported document types"""
+    CONTRACT = "contracts"
+    STATUTE = "statutes" 
+    CASE_LAW = "case_law"
+    REGULATION = "regulations"
+    LEGAL_MEMO = "legal_memos"
+    COURT_FILING = "court_filings"
+
+class RetrieverType(Enum):
+    """Supported retriever types"""
+    VECTOR_SIMILARITY = "vector_similarity"
+    BM25 = "bm25"
+    HYBRID = "hybrid"
+    DENSE_PASSAGE = "dense_passage"
+    SEMANTIC_SEARCH = "semantic_search"
+
+@dataclass
+class SearchResult:
+    """Structure for search results"""
+    content: str
+    document_title: str
+    relevance_score: float
+    document_type: str
+    date: str
+    citation: str
+    metadata: Dict[str, Any]
+
+@dataclass
+class RAGResponse:
+    """Structure for RAG response"""
+    answer: str
+    sources: List[SearchResult]
+    confidence_score: float
+    query: str
+    retriever_used: str
+    processing_time: float
+
+
+@dataclass
+class RetrieverConfig:
+    """Configuration for retriever"""
+    type: RetrieverType
+    params: Dict[str, Any]
+    document_types: List[DocumentType]
