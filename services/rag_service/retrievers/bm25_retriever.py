@@ -1,5 +1,5 @@
 from .base_retriever import BaseRetriever
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from services.rag_service.models import SearchResult, RetrieverConfig
 import os
 import pickle
@@ -32,7 +32,7 @@ class LocalBM25Retriever(BaseRetriever):
                     raise FileNotFoundError(f"No BM25 store found for document type: {doc_type}")
             self.vector_client = BM25Retriever.from_documents(all_documents, k1=self.config.params.get("k1", 1.2), b=self.config.params.get("b", 0.75), epsilon=self.config.params.get("epsilon", 0.25))
     
-    def search(self, query: str, filters: Dict[str, Any], max_results: int) -> List[SearchResult]:
+    def search(self, query: str, max_results: int, filters: Optional[Dict[str, Any]] = None) -> List[SearchResult]:
         """Search using BM25 and return structured search results."""
         if self.vector_client is None:
             raise RuntimeError("BM25 retriever not initialized. Call initialize_connection() first.")

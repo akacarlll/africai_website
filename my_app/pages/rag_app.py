@@ -3,6 +3,10 @@ import os
 # from dotenv import load_dotenv
 from typing import Dict, Any
 import streamlit as st
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from components.sidebar import sidebar_config
 from components.sidebar import sidebar_config
 from components.display import render_chat_history, append_message
 from services.query_processor import process_query
