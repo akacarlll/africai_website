@@ -1,6 +1,6 @@
-from base_retriever import BaseRetriever
+from .base_retriever import BaseRetriever
 from typing import Dict, List, Any
-from rag_service.models import SearchResult
+from services.rag_service.models import SearchResult
 
 
 class BM25Retriever(BaseRetriever):

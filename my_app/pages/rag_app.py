@@ -2,13 +2,16 @@ import streamlit as st
 import os
 # from dotenv import load_dotenv
 from typing import Dict, Any
-
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from services.rag_service.rag_service import get_rag_service
 
 # load_dotenv()
 def get_retriever_sidebar_params(retriever_type: str):
     """Generate retriever-specific parameters in sidebar and return them explicitly"""
 
-    params: Dict[str, Any] = {"type": retriever_type}
+    params: Dict[str, Any] = {"retriever_type": retriever_type}
     
     st.subheader("Retriever Parameters")
     
@@ -134,8 +137,6 @@ def get_retriever_sidebar_params(retriever_type: str):
             ["facebook/dpr-ctx_encoder-single-nq-base", "sentence-transformers/all-MiniLM-L6-v2"],
             help="Model used to encode passages for dense retrieval"
         )
-    
-    # Always show current parameters being used
     with st.expander("Current Parameters", expanded=False):
         st.json(params)
     
@@ -178,8 +179,8 @@ def main():
         st.header("🔍 Search Options")
         doc_types = st.multiselect(
             "Document Types",
-            ["Code Juridique", "Arrétés", "Loi", "Circulaire", "Autres", "Décret", "Arrets"],
-            default=["Code Juridique", "Loi"]
+            ["code", "Arrétés", "Loi", "Circulaire", "Autres", "Décret", "Arrets"],
+            default=["code", "Loi"]
         )
 
         retriever_options = {
@@ -249,7 +250,7 @@ def main():
         
         retriever_type = retriever_display
         retriever_params = get_retriever_sidebar_params(retriever_type) 
-
+        retriever_params["doc_type"] = doc_types
         st.subheader("Date Range")
         col1, col2 = st.columns(2)
         with col1:
@@ -288,6 +289,10 @@ def process_query(query: str, doc_types: list, retriever_type: str, retriever_pa
     Placeholder function for RAG processing
     TODO: Replace with actual vector search and LLM integration
     """
+    rag_service = get_rag_service()
+    search_results = rag_service.search_documents(query, retriever_type, retriever_params, doc_types, start_year, end_year, max_results)
+    doc_text = " ---- ".join(search_result.content for search_result in search_results)
+    return f"""{doc_text}"""
     return f"""
     **Query received:** "{query}"
     

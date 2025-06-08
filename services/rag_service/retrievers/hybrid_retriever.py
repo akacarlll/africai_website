@@ -1,9 +1,9 @@
-from rag_service.models import RetrieverConfig, SearchResult, RetrieverType
+from services.rag_service.models import RetrieverConfig, SearchResult, RetrieverType
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
-from base_retriever import BaseRetriever
-from bm_retriever import BM25Retriever
-from chroma_retriever import VectorSimilarityRetriever
+from .base_retriever import BaseRetriever
+from .bm25_retriever import BM25Retriever
+from .chroma_retriever import VectorSimilarityRetriever
 class HybridRetriever(BaseRetriever):
     """Hybrid retriever combining vector and keyword search"""
     

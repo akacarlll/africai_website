@@ -1,7 +1,7 @@
-from rag_service.models import RetrieverConfig, SearchResult
+from services.rag_service.models import RetrieverConfig, SearchResult
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
-from base_retriever import BaseRetriever
+from .base_retriever import BaseRetriever
 class VectorSimilarityRetriever(BaseRetriever):
     """Vector similarity search retriever"""
     

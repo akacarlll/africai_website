@@ -7,10 +7,10 @@ import os
 from dataclasses import dataclass
 from langchain.retrievers import EnsembleRetriever
 from .models import RAGResponse, SearchResult, DocumentType, RetrieverType, RetrieverConfig
-from retrievers.bm_retriever import BM25Retriever
-from retrievers.hybrid_retriever import HybridRetriever
-from retrievers.chroma_retriever import VectorSimilarityRetriever
+from .retrievers import FaissRetriever, BM25Retriever, HybridRetriever, VectorSimilarityRetriever,BaseRetriever
+from langchain.embeddings import HuggingFaceEmbeddings
 
+EMBEDDINGS = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 class RAGService:
     """Main RAG orchestration service"""
@@ -21,16 +21,44 @@ class RAGService:
         # self.vector_service = VectorService()
         # self.llm_service = LLMService()
         pass
-    
+    def _get_retriever(self, retriever_type: str, params: Dict[str, Any], doc_types: List[str]) -> BaseRetriever:
+        """Get and configure the appropriate retriever"""
+        
+        # Convert document types
+        # document_types = [DocumentType(dt.lower().replace(" ", "_")) for dt in doc_types or []]
+        
+
+        config = RetrieverConfig(
+            type=RetrieverType(retriever_type),
+            params=params,
+            document_types=doc_types # type: ignore
+        )
+        if retriever_type == "vector_similarity":
+            retriever = VectorSimilarityRetriever(config)
+        elif retriever_type == "bm25":
+            retriever = BM25Retriever(config)
+        elif retriever_type == "hybrid":
+            retriever = HybridRetriever(config)
+        elif retriever_type == "faiss_retriever":
+            retriever = FaissRetriever(config, embeddings=EMBEDDINGS)
+        else:
+            # Default to vector similarity
+            retriever = VectorSimilarityRetriever(config)
+        
+
+        retriever.initialize_connection()
+        return retriever
     def search_documents(
         self, 
         query: str, 
-        retriever_type: EnsembleRetriever,
-        doc_types: Optional[List[str]] = None,
+        retriever_type: str,
+        params: dict[str, Any],
+        doc_types: List[str],
         start_year: Optional[int] = None,
         end_year: Optional[int] = None,
         max_results: int = 10
-    ) -> RAGResponse:
+    ):
+    # ) -> RAGResponse:
         """
         Main RAG pipeline: search + generate
         
@@ -44,16 +72,14 @@ class RAGService:
         Returns:
             RAGResponse with answer and sources
         """
-        
-        # Step 1: Vector search in your existing index
+        retriever = self._get_retriever(retriever_type, params, doc_types)
+
         search_results = self._vector_search(
-            query, retriever_type, doc_types, start_year, end_year, max_results
+            query, retriever, doc_types, start_year, end_year, max_results
         )
-        
-        # Step 2: Generate answer using LLM
+        return search_results
         answer = self._generate_answer(query, search_results)
         
-        # Step 3: Calculate confidence score
         confidence = self._calculate_confidence(search_results)
         
         return RAGResponse(
@@ -64,34 +90,7 @@ class RAGService:
             retriever_used="ensemble",
             processing_time=0
         )
-    def _get_retriever(self, retriever_type: str, params: Dict[str, Any], doc_types: List[str]) -> BaseRetriever:
-        """Get and configure the appropriate retriever"""
-        
-        # Convert document types
-        document_types = [DocumentType(dt.lower().replace(" ", "_")) for dt in doc_types or []]
-        
-        # Create retriever config
-        config = RetrieverConfig(
-            type=RetrieverType(retriever_type),
-            params=params,
-            document_types=document_types
-        )
-        
-        # Create appropriate retriever
-        if retriever_type == "vector_similarity":
-            retriever = VectorSimilarityRetriever(config)
-        elif retriever_type == "bm25":
-            retriever = BM25Retriever(config)
-        elif retriever_type == "hybrid":
-            retriever = HybridRetriever(config)
-        else:
-            # Default to vector similarity
-            retriever = VectorSimilarityRetriever(config)
-        
-        # Initialize connection if not already done
-        if not hasattr(retriever, '_initialized'):
-            retriever.initialize_connection()
-        return retriever
+
     
     def _build_filters(self, doc_types: List[str], start_year: int, end_year: int) -> Dict[str, Any]:
         """Build filters for search"""
@@ -107,7 +106,7 @@ class RAGService:
     def _vector_search(
         self, 
         query: str, 
-        retriever_type: EnsembleRetriever, 
+        retriever: BaseRetriever, 
         doc_types: Optional[List[str]] = None,
         start_year: Optional[int] = None, # 
         end_year: Optional[int] = None,
@@ -129,28 +128,29 @@ class RAGService:
         
         # For Chroma:
         # results = self.vector_service.query_chroma(query, where=filters, n_results=max_results)
-        
+        results = retriever.search(query, max_results)
         # Placeholder results for now
-        return [
-            SearchResult(
-                content="Sample legal document content relevant to the query...",
-                document_title="Sample Contract Agreement",
-                relevance_score=0.95,
-                document_type="Contract",
-                date="2023-01-15",
-                citation="Sample Citation Format",
-                metadata={"jurisdiction": "Federal", "practice_area": "Commercial Law"}
-            ),
-            SearchResult(
-                content="Another relevant legal document excerpt...",
-                document_title="Relevant Case Law",
-                relevance_score=0.87,
-                document_type="Case Law",
-                date="2022-08-20",
-                citation="Case v. Citation, 123 F.3d 456 (2022)",
-                metadata={"jurisdiction": "State", "practice_area": "Contract Law"}
-            )
-        ]
+        return results 
+    #[
+        #     SearchResult(
+        #         content="Sample legal document content relevant to the query...",
+        #         document_title="Sample Contract Agreement",
+        #         relevance_score=0.95,
+        #         document_type="Contract",
+        #         date="2023-01-15",
+        #         citation="Sample Citation Format",
+        #         metadata={"jurisdiction": "Federal", "practice_area": "Commercial Law"}
+        #     ),
+        #     SearchResult(
+        #         content="Another relevant legal document excerpt...",
+        #         document_title="Relevant Case Law",
+        #         relevance_score=0.87,
+        #         document_type="Case Law",
+        #         date="2022-08-20",
+        #         citation="Case v. Citation, 123 F.3d 456 (2022)",
+        #         metadata={"jurisdiction": "State", "practice_area": "Contract Law"}
+        #     )
+        # ]
     
     def _generate_answer(self, query: str, search_results: List[SearchResult]) -> str:
         """

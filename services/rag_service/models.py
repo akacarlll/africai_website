@@ -10,14 +10,17 @@ class DocumentType(Enum):
     REGULATION = "regulations"
     LEGAL_MEMO = "legal_memos"
     COURT_FILING = "court_filings"
+    CODE = "code"
 
-class RetrieverType(Enum):
+class   RetrieverType(Enum):
     """Supported retriever types"""
-    VECTOR_SIMILARITY = "vector_similarity"
+    ENSEMBLE = "ensemble_retriever"
     BM25 = "bm25"
     HYBRID = "hybrid"
     DENSE_PASSAGE = "dense_passage"
-    SEMANTIC_SEARCH = "semantic_search"
+    FAISS = "faiss_retriever"
+    QDRANT = "qdrant_retriever"
+    CHROMA = "chroma_retriever"
 
 @dataclass
 class SearchResult:
@@ -47,3 +50,10 @@ class RetrieverConfig:
     type: RetrieverType
     params: Dict[str, Any]
     document_types: List[DocumentType]
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "RetrieverConfig":
+        return RetrieverConfig(
+            type=data["type"],
+            params={k: v for k, v in data.items() if k not in {"retriever_type", "doc_type"}},
+            document_types=data.get("doc_type", [])
+        )
