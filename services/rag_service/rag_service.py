@@ -7,7 +7,7 @@ import os
 from dataclasses import dataclass
 from langchain.retrievers import EnsembleRetriever
 from .models import RAGResponse, SearchResult, DocumentType, RetrieverType, RetrieverConfig
-from .retrievers import FaissRetriever, BM25Retriever, HybridRetriever, VectorSimilarityRetriever,BaseRetriever
+from .retrievers import FaissRetriever, LocalBM25Retriever, HybridRetriever, VectorSimilarityRetriever,BaseRetriever
 from langchain.embeddings import HuggingFaceEmbeddings
 
 EMBEDDINGS = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
@@ -36,7 +36,7 @@ class RAGService:
         if retriever_type == "vector_similarity":
             retriever = VectorSimilarityRetriever(config)
         elif retriever_type == "bm25":
-            retriever = BM25Retriever(config)
+            retriever = LocalBM25Retriever(config)
         elif retriever_type == "hybrid":
             retriever = HybridRetriever(config)
         elif retriever_type == "faiss_retriever":
