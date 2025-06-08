@@ -14,7 +14,7 @@ class LocalBM25Retriever(BaseRetriever):
         doc_types = self.config.document_types
         all_documents = []
         if len(doc_types) == 1:
-            path = os.path.join(base_path, f"{doc_types[0]}.pkl")
+            path = os.path.join(base_path, doc_types[0], "bm25_index.pkl") # type: ignore
             if os.path.exists(path):
                 with open(path, "rb") as f:
                     docs = pickle.load(f)
@@ -23,7 +23,7 @@ class LocalBM25Retriever(BaseRetriever):
                 raise FileNotFoundError(f"No BM25 store found for document type: {doc_types[0]}")
         else :
             for doc_type in doc_types:
-                path = os.path.join(base_path, f"{doc_type}.pkl")
+                path = os.path.join(base_path, doc_type, "bm25_index.pkl") # type: ignore
                 if os.path.exists(path):
                     with open(path, "rb") as f:
                         docs = pickle.load(f) 
