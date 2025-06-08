@@ -90,8 +90,7 @@ class RAGService:
             retriever_used="ensemble",
             processing_time=0
         )
-
-    
+       
     def _build_filters(self, doc_types: List[str], start_year: int, end_year: int) -> Dict[str, Any]:
         """Build filters for search"""
         filters = {}
@@ -116,41 +115,8 @@ class RAGService:
         Search your existing vector index
         TODO: Replace with actual vector database integration
         """
-        
-        # This is where you'll connect to your existing index
-        # Example for different vector databases:
-        
-        # For Pinecone:
-        # results = self.vector_service.query_pinecone(query, filters, top_k=max_results)
-        
-        # For Weaviate:
-        # results = self.vector_service.query_weaviate(query, where_filter, limit=max_results)
-        
-        # For Chroma:
-        # results = self.vector_service.query_chroma(query, where=filters, n_results=max_results)
-        results = retriever.search(query, max_results)
-        # Placeholder results for now
-        return results 
-    #[
-        #     SearchResult(
-        #         content="Sample legal document content relevant to the query...",
-        #         document_title="Sample Contract Agreement",
-        #         relevance_score=0.95,
-        #         document_type="Contract",
-        #         date="2023-01-15",
-        #         citation="Sample Citation Format",
-        #         metadata={"jurisdiction": "Federal", "practice_area": "Commercial Law"}
-        #     ),
-        #     SearchResult(
-        #         content="Another relevant legal document excerpt...",
-        #         document_title="Relevant Case Law",
-        #         relevance_score=0.87,
-        #         document_type="Case Law",
-        #         date="2022-08-20",
-        #         citation="Case v. Citation, 123 F.3d 456 (2022)",
-        #         metadata={"jurisdiction": "State", "practice_area": "Contract Law"}
-        #     )
-        # ]
+        return retriever.search(query, max_results)
+
     
     def _generate_answer(self, query: str, search_results: List[SearchResult]) -> str:
         """

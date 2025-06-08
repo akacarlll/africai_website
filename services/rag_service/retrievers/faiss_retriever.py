@@ -54,11 +54,6 @@ class FaissRetriever(BaseRetriever):
                     metadata=doc.metadata if doc.metadata else {},
                     relevance_score=0,
                     document_type=self.config.document_types[0], # type: ignore
-                    # date=doc.metadata["year"],
-                    date="2024",
-                    citation=doc.page_content[:20],
-                    # document_title=doc.metadata["page_title"]
-                    document_title="Acte Ohada"
                 ))
 
         results.sort(key=lambda r: r.relevance_score, reverse=True)

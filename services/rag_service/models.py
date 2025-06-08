@@ -26,11 +26,8 @@ class   RetrieverType(Enum):
 class SearchResult:
     """Structure for search results"""
     content: str
-    document_title: str
     relevance_score: float
     document_type: str
-    date: str
-    citation: str
     metadata: Dict[str, Any]
 
 @dataclass

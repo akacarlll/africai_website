@@ -54,9 +54,6 @@ class LocalBM25Retriever(BaseRetriever):
                 metadata=metadata,
                 relevance_score=0,
                 document_type=self.config.document_types[0], # type: ignore
-                date=metadata.get("year", "2024"),
-                citation=content[:20],
-                document_title=metadata.get("page_title", "Acte Ohada")
             ))
 
             if len(results) >= max_results:
