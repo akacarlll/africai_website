@@ -1,15 +1,12 @@
 """
 RAG Service - Main orchestration for Retrieval-Augmented Generation
 """
-
+from langchain.prompts import PromptTemplate
 from typing import List, Dict, Any, Optional
-import os
-from dataclasses import dataclass
-from langchain.retrievers import EnsembleRetriever
-from .models import RAGResponse, SearchResult, DocumentType, RetrieverType, RetrieverConfig
-from .retrievers import FaissRetriever, LocalBM25Retriever, HybridRetriever, VectorSimilarityRetriever,BaseRetriever
+from .models import RAGResponse, SearchResult,RetrieverType, RetrieverConfig
+from .retrievers import FaissRetriever, LocalBM25Retriever, HybridRetriever, VectorSimilarityRetriever, BaseRetriever
 from langchain.embeddings import HuggingFaceEmbeddings
-
+from services.llm_service import SimpleLLM
 EMBEDDINGS = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 class RAGService:
@@ -17,10 +14,9 @@ class RAGService:
     
     def __init__(self):
         """Initialize RAG service with vector DB and LLM connections"""
-        # TODO: Initialize your vector database connection
-        # self.vector_service = VectorService()
-        # self.llm_service = LLMService()
-        pass
+        self.llm = SimpleLLM()
+        self.chains = {}
+
     def _get_retriever(self, retriever_type: str, params: Dict[str, Any], doc_types: List[str]) -> BaseRetriever:
         """Get and configure the appropriate retriever"""
         
@@ -77,7 +73,7 @@ class RAGService:
         search_results = self._vector_search(
             query, retriever, doc_types, start_year, end_year, max_results
         )
-        return search_results
+
         answer = self._generate_answer(query, search_results)
         
         confidence = self._calculate_confidence(search_results)
@@ -123,27 +119,10 @@ class RAGService:
         Generate answer using LLM based on retrieved documents
         TODO: Replace with actual LLM integration
         """
-        
-        # This is where you'll integrate with OpenAI, Anthropic, etc.
-        # Example:
-        # context = "\n\n".join([result.content for result in search_results])
-        # prompt = self._build_prompt(query, context)
+        context = "\n\n".join([result.content for result in search_results])
+        prompt = self._build_prompt(query, context)
         # response = self.llm_service.generate(prompt)
         
-        # Placeholder response
-        return f"""
-        Based on the retrieved legal documents, here's what I found regarding your query: "{query}"
-
-        **Key Findings:**
-        - Found {len(search_results)} relevant documents
-        - Highest relevance score: {max(r.relevance_score for r in search_results):.2f}
-        - Document types covered: {', '.join(set(r.document_type for r in search_results))}
-
-        **Analysis:**
-        [This is where the LLM-generated analysis will appear based on the retrieved document chunks]
-
-        **Note:** This is a placeholder response. The actual implementation will provide detailed legal analysis based on your document corpus.
-                """
     
     def _calculate_confidence(self, search_results: List[SearchResult]) -> float:
         """Calculate confidence score based on search results"""
@@ -155,20 +134,26 @@ class RAGService:
         top_score = max(result.relevance_score for result in search_results)
         return min(top_score, 1.0)
     
-    def _build_prompt(self, query: str, context: str) -> str:
-        """Build prompt for LLM"""
-        return f"""
-        You are a legal AI assistant. Based on the following legal documents, provide a comprehensive answer to the user's question.
+    def _build_prompt(self, query: str, context: str) -> PromptTemplate:
+        """Build prompt for LLM with query and context as arguments"""
+        return PromptTemplate(
+            input_variables=["context", "question"],
+            template="""You are a helpful AI assistant. Use the following context to answer the question accurately and comprehensively.
 
-        Context from legal documents:
+        Context:
         {context}
 
-        User question: {query}
+        Question: {question}
 
-        Please provide a detailed, accurate response based solely on the provided legal documents. Include relevant citations and be precise about legal concepts.
+        Instructions:
+        - Base your answer strictly on the provided context
+        - If the context doesn't contain enough information, say so
+        - Be precise and cite relevant information from the context
+        - Provide a structured and clear response
 
-        Response:
-                """
+        Answer:""",
+            partial_variables={"context": context, "question": query}
+        )
 
 # Singleton instance
 _rag_service = None
