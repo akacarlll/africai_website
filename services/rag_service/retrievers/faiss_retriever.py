@@ -18,8 +18,22 @@ class FaissRetriever(BaseRetriever):
 
     def initialize_connection(self):
         """Load FAISS vector store from disk."""
-        path = rf"C:\Users\carlf\Documents\GitHub\AfricAI\vector_stores\faiss_stores\{self.config.document_types[0]}"
-        self.vector_client = FAISS.load_local(path, embeddings=self.embeddings, allow_dangerous_deserialization=True)
+        base_path = r"C:\Users\carlf\Documents\GitHub\AfricAI\vector_stores\faiss_stores"
+        doc_types = self.config.document_types
+
+        if len(doc_types) == 1:
+            path = rf"{base_path}\{doc_types[0]}"
+            self.vector_client = FAISS.load_local(path, embeddings=self.embeddings, allow_dangerous_deserialization=True)
+        else:
+            first_path = rf"{base_path}\{doc_types[0]}"
+            merged_faiss = FAISS.load_local(first_path, embeddings=self.embeddings, allow_dangerous_deserialization=True)
+
+            for doc_type in doc_types[1:]:
+                path = rf"{base_path}\{doc_type}"
+                next_faiss = FAISS.load_local(path, embeddings=self.embeddings, allow_dangerous_deserialization=True)
+                merged_faiss.merge_from(next_faiss)
+
+            self.vector_client = merged_faiss
 
     def search(self, query: str, max_results: int, filters: Optional[Dict[str, Any]] = None) -> List[SearchResult]:
         """Search using LangChain FAISS and return scored results."""
