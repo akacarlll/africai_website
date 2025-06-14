@@ -12,12 +12,12 @@ class LLMService:
     
     def __init__(
         self,
-        google_api_key: Optional[str] = os.environ["GOOGLE_API_KEY"],
-        together_api_key: Optional[str] = os.environ["TOGETHER_AI_API_KEY"],
+        google_api_key: Optional[str] = None,
+        together_api_key: Optional[str] = None,
         default_google_model: str = "gemini-1.5-flash",
         default_together_model: str = "meta-llama/Llama-3.2-3B-Instruct-Turbo",
         temperature: float = 0.7,
-        max_tokens: int = 1024,
+        max_tokens: int = 512,
     ):
         """
         Initialize the LLM client with API keys and default parameters.
@@ -65,7 +65,7 @@ class LLMService:
                 "maxOutputTokens": max_tok
             }
         }
-        
+        self.google_api_key = os.environ["GOOGLE_API_KEY"]
         params = {"key": self.google_api_key}
         
         response = requests.post(url, headers=headers, json=payload, params=params)
@@ -90,7 +90,7 @@ class LLMService:
         model = model or self.default_together_model
         temp = temperature if temperature is not None else self.temperature
         max_tok = max_tokens or self.max_tokens
-        
+        self.together_api_key = os.environ["TOGETHER_AI_API_KEY"]
         headers = {
             "Authorization": f"Bearer {self.together_api_key}",
             "Content-Type": "application/json"
