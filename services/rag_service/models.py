@@ -27,7 +27,7 @@ class SearchResult:
     """Structure for search results"""
     content: str
     relevance_score: float
-    document_type: str
+    document_type: list[str]
     metadata: Dict[str, Any]
 
 @dataclass
@@ -46,7 +46,7 @@ class RetrieverConfig:
     """Configuration for retriever"""
     type: RetrieverType
     params: Dict[str, Any]
-    document_types: List[DocumentType]
+    document_types: List[str]
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "RetrieverConfig":
         return RetrieverConfig(

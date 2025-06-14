@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 from .base_retriever import BaseRetriever
 from services.rag_service.models import RetrieverConfig, SearchResult
-
+from utils.helpers import DOC_TYPES_DICT
 class FaissRetriever(BaseRetriever):
     """
     FAISS retriever using LangChain's FAISS wrapper.
@@ -22,14 +22,14 @@ class FaissRetriever(BaseRetriever):
         doc_types = self.config.document_types
 
         if len(doc_types) == 1:
-            path = rf"{base_path}\{doc_types[0]}"
+            path = rf"{base_path}\{DOC_TYPES_DICT[doc_types[0]]}"
             self.vector_client = FAISS.load_local(path, embeddings=self.embeddings, allow_dangerous_deserialization=True)
         else:
-            first_path = rf"{base_path}\{doc_types[0]}"
+            first_path = rf"{base_path}\{DOC_TYPES_DICT[doc_types[0]]}"
             merged_faiss = FAISS.load_local(first_path, embeddings=self.embeddings, allow_dangerous_deserialization=True)
 
             for doc_type in doc_types[1:]:
-                path = rf"{base_path}\{doc_type}"
+                path = rf"{base_path}\{DOC_TYPES_DICT[doc_type]}"
                 next_faiss = FAISS.load_local(path, embeddings=self.embeddings, allow_dangerous_deserialization=True)
                 merged_faiss.merge_from(next_faiss)
 
@@ -41,20 +41,13 @@ class FaissRetriever(BaseRetriever):
             raise RuntimeError("FAISS vector store not initialized. Call initialize_connection() first.")
 
         docs = self.vector_client.similarity_search(query, k=max_results)
-        query_emb = self.embeddings.embed_query(query)
         results = []
 
         for doc in docs:
-            doc_emb = self.embeddings.embed_query(doc.page_content)
-            score = float(np.dot(query_emb, doc_emb))
-
-            if score >= self.config.params["similarity_threshold"]:
-                results.append(SearchResult(
-                    content=doc.page_content,
-                    metadata=doc.metadata if doc.metadata else {},
-                    relevance_score=0,
-                    document_type=self.config.document_types[0], # type: ignore
-                ))
-
-        results.sort(key=lambda r: r.relevance_score, reverse=True)
+            results.append(SearchResult(
+                content=doc.page_content,
+                metadata=doc.metadata if doc.metadata else {},
+                relevance_score=0,
+                document_type=self.config.document_types,
+            ))
         return results

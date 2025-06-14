@@ -140,8 +140,8 @@ def sidebar_config():
     st.header("🔍 Search Options")
     doc_types = st.multiselect(
         "Document Types",
-        ["code", "Arrétés", "Loi", "Circulaire", "Autres", "Décret", "Arrets"],
-        default=["code", "Loi"]
+        ["Code", "Arrétés", "Loi", "Circulaire", "Autres", "Décret", "Arrets"],
+        default=["Code", "Loi"]
     )
 
     retriever_options = {
@@ -221,7 +221,7 @@ def sidebar_config():
 
     max_results = st.slider("Max Results", min_value=5, max_value=50, value=10)
     return {
-        "doc_types": doc_types,
+        "doc_types": doc_types, 
         "retriever_type": retriever_type,
         "retriever_params": retriever_params,
         "start_year": start_year,
