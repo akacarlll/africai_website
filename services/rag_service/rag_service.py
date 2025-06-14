@@ -6,7 +6,8 @@ from typing import List, Dict, Any, Optional
 from .models import RAGResponse, SearchResult,RetrieverType, RetrieverConfig
 from .retrievers import FaissRetriever, LocalBM25Retriever, HybridRetriever, VectorSimilarityRetriever, BaseRetriever
 from langchain.embeddings import HuggingFaceEmbeddings
-from services.llm_service import SimpleLLM
+from services.llm_service import LLMService
+from dotenv import load_dotenv
 EMBEDDINGS = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 class RAGService:
@@ -14,8 +15,7 @@ class RAGService:
     
     def __init__(self):
         """Initialize RAG service with vector DB and LLM connections"""
-        self.llm = SimpleLLM()
-        self.chains = {}
+        self.llm = LLMService()
 
     def _get_retriever(self, retriever_type: str, params: Dict[str, Any], doc_types: List[str]) -> BaseRetriever:
         """Get and configure the appropriate retriever"""
@@ -68,6 +68,9 @@ class RAGService:
         Returns:
             RAGResponse with answer and sources
         """
+        print("Loading The Env Variable.")
+        load_dotenv(r"C:\Users\carlf\Documents\GitHub\africai_website\.env")
+
         retriever = self._get_retriever(retriever_type, params, doc_types)
 
         search_results = self._vector_search(
@@ -83,7 +86,7 @@ class RAGService:
             sources=search_results,
             confidence_score=confidence,
             query=query,
-            retriever_used="ensemble",
+            retriever_used=retriever_type,
             processing_time=0
         )
        
@@ -121,9 +124,9 @@ class RAGService:
         """
         context = "\n\n".join([result.content for result in search_results])
         prompt = self._build_prompt(query, context)
-        # response = self.llm_service.generate(prompt)
+        return self.llm.generate(prompt)
         
-    
+        
     def _calculate_confidence(self, search_results: List[SearchResult]) -> float:
         """Calculate confidence score based on search results"""
         if not search_results:
@@ -134,12 +137,11 @@ class RAGService:
         top_score = max(result.relevance_score for result in search_results)
         return min(top_score, 1.0)
     
-    def _build_prompt(self, query: str, context: str) -> PromptTemplate:
+    def _build_prompt(self, query: str, context: str) -> str:
         """Build prompt for LLM with query and context as arguments"""
-        return PromptTemplate(
-            input_variables=["context", "question"],
-            template="""You are a helpful AI assistant. Use the following context to answer the question accurately and comprehensively.
-
+ 
+        template = """You are a helpful AI assistant. Use the following context to answer the question accurately and comprehensively.
+ 
         Context:
         {context}
 
@@ -151,10 +153,9 @@ class RAGService:
         - Be precise and cite relevant information from the context
         - Provide a structured and clear response
 
-        Answer:""",
-            partial_variables={"context": context, "question": query}
-        )
-
+        Answer:"""
+        return template.format(context=context, question=query)
+    
 # Singleton instance
 _rag_service = None
 

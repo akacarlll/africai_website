@@ -1,4 +1,4 @@
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 import streamlit as st
 import sys
 import os
@@ -7,7 +7,7 @@ from components.sidebar import sidebar_config
 from components.sidebar import sidebar_config
 from components.display import render_chat_history, append_message
 from services.query_processor import process_query
-# load_dotenv()
+load_dotenv(r"C:\Users\carlf\Documents\GitHub\africai_website\.env")
 # Page configuration
 st.set_page_config(
     page_title="AfricAI Legal IA",
@@ -47,7 +47,6 @@ def main():
 
     st.subheader("💬 Ask a Legal Question")
     render_chat_history()
-
     if prompt := st.chat_input("Enter your legal question..."):
         append_message("user", prompt)
         with st.chat_message("user"):
@@ -69,13 +68,13 @@ def main():
 
 def check_environment():
     """Check if required environment variables are set"""
-    # required_vars = ["OPENAI_API_KEY"]  # Add your vector DB vars here
-    # missing_vars = [var for var in required_vars if not os.getenv(var)]
+    required_vars = ["TOGETHER_AI_API_KEY", "GOOGLE_API_KEY"] 
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
     
-    # if missing_vars:
-    #     st.error(f"⚠️ Missing environment variables: {', '.join(missing_vars)}")
-    #     st.info("Please create a `.env` file with the required variables. See `.env.example` for reference.")
-    #     return False
+    if missing_vars:
+        st.error(f"⚠️ Missing environment variables: {', '.join(missing_vars)}")
+        st.info("Please create a `.env` file with the required variables. See `.env.example` for reference.")
+        return False
     return True
 
 if __name__ == "__main__":

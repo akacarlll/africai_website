@@ -1,106 +1,146 @@
-from typing import Any, List, Optional
 import os
 import requests
-from langchain.llms.base import LLM
-from langchain.prompts import PromptTemplate
-from langchain.callbacks.manager import CallbackManagerForLLMRun
+import json
+from typing import Dict, Any, Optional
 
 
-class SimpleLLM(LLM):
-    """LLM wrapper supporting multiple API providers: Together AI, DeepSeek"""
+class LLMService:
+    """
+    Unified interface for Google AI and Together AI models.
+    Handles initialization, dynamic prompting, and flexible generation.
+    """
     
     def __init__(
-        self, 
-        provider: str = "together",  # "together", "deepseek"
-        model: Optional[str] = None,
-        api_key: Optional[str] = None,
-        base_url: Optional[str] = None,
-        max_tokens: int = 1024,
-        temperature: float = 0.7,
-        **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.provider = provider.lower()
-        self.max_tokens = max_tokens
-        self.temperature = temperature
-        
-        # Set up provider-specific configurations
-        if self.provider == "together":
-            self.api_key = api_key or os.getenv("TOGETHER_API_KEY")
-            self.base_url = base_url or "https://api.together.xyz/v1"
-            self.model = model or "meta-llama/Llama-2-7b-chat-hf"
-            self.headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-        elif self.provider == "deepseek":
-            self.api_key = api_key or os.getenv("DEEPSEEK_API_KEY")
-            self.base_url = base_url or "https://api.deepseek.com/v1"
-            self.model = model or "deepseek-chat"
-            self.headers = {
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            }
-        else:
-            raise ValueError(f"Unsupported provider: {provider}")
-            
-        if not self.api_key:
-            raise ValueError(f"API key required for {self.provider}. Set {self.provider.upper()}_API_KEY environment variable.")
-    
-    @property
-    def _llm_type(self) -> str:
-        return f"{self.provider}_llm"
-    
-    def _call(
         self,
-        prompt: str,
-        stop: Optional[List[str]] = None,
-        run_manager: Optional[CallbackManagerForLLMRun] = None,
-        **kwargs: Any,
-    ) -> str:
-        # Prepare the API request
-        url = f"{self.base_url}/chat/completions"
-        
-        # Format messages for chat completion
-        messages = [{"role": "user", "content": prompt}]
-        
-        payload = {
-            "model": self.model,
-            "messages": messages,
-            "max_tokens": self.max_tokens,
-            "temperature": self.temperature,
-            "stream": False
-        }
-        
-        # Add stop sequences if provided
-        if stop:
-            payload["stop"] = stop
-            
-        try:
-            response = requests.post(url, json=payload, headers=self.headers)
-            response.raise_for_status()
-            
-            result = response.json()
-            return result["choices"][0]["message"]["content"].strip()
-            
-        except requests.exceptions.RequestException as e:
-            return f"Error calling {self.provider} API: {str(e)}"
-        except (KeyError, IndexError) as e:
-            return f"Error parsing {self.provider} response: {str(e)}"
-    
-    def generate(self, prompt_template: PromptTemplate, **kwargs) -> str:
+        google_api_key: Optional[str] = os.environ["GOOGLE_API_KEY"],
+        together_api_key: Optional[str] = os.environ["TOGETHER_AI_API_KEY"],
+        default_google_model: str = "gemini-1.5-flash",
+        default_together_model: str = "meta-llama/Llama-3.2-3B-Instruct-Turbo",
+        temperature: float = 0.7,
+        max_tokens: int = 1024,
+    ):
         """
-        Generate text from a PromptTemplate
+        Initialize the LLM client with API keys and default parameters.
         
         Args:
-            prompt_template: The PromptTemplate to use for generation
-            **kwargs: Additional variables for the prompt template
+            google_api_key: API key for Google AI
+            together_api_key: API key for Together AI
+            default_google_model: Default Google model to use
+            default_together_model: Default Together AI model to use
+            temperature: Default temperature for generation
+            max_tokens: Default max tokens for generation
+        """
+        self.google_api_key = google_api_key
+        self.together_api_key = together_api_key
+        self.default_google_model = default_google_model
+        self.default_together_model = default_together_model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        
+        # API endpoints
+        self.google_endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        self.together_endpoint = "https://api.together.xyz/v1/chat/completions"
+    
+    
+    def _call_google_ai(
+        self, 
+        prompt: str, 
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None
+    ) -> str:
+        """Make API call to Google AI."""
+        
+        model = model or self.default_google_model
+        temp = temperature if temperature is not None else self.temperature
+        max_tok = max_tokens or self.max_tokens
+        
+        url = self.google_endpoint.format(model=model)
+        headers = {"Content-Type": "application/json"}
+        
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": temp,
+                "maxOutputTokens": max_tok
+            }
+        }
+        
+        params = {"key": self.google_api_key}
+        
+        response = requests.post(url, headers=headers, json=payload, params=params)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if "candidates" in data and len(data["candidates"]) > 0:
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+        else:
+            raise Exception("No response generated from Google AI")
+    
+    def _call_together_ai(
+        self, 
+        prompt: str, 
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None
+    ) -> str:
+        """Make API call to Together AI."""
+        
+        model = model or self.default_together_model
+        temp = temperature if temperature is not None else self.temperature
+        max_tok = max_tokens or self.max_tokens
+        
+        headers = {
+            "Authorization": f"Bearer {self.together_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": temp,
+            "max_tokens": max_tok
+        }
+        
+        response = requests.post(self.together_endpoint, headers=headers, json=payload)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if "choices" in data and len(data["choices"]) > 0:
+            return data["choices"][0]["message"]["content"]
+        else:
+            raise Exception("No response generated from Together AI")
+    
+    def generate(
+        self,
+        prompt: str, 
+        provider: str = "google",
+        model: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None
+    ) -> str:
+        """
+        Generate text using specified provider and parameters.
+        
+        Args:
+            prompt_template: Either a template string with {variable} placeholders 
+                           or a PromptTemplate object with template and partial_variables
+            variables: Dictionary of variables to substitute (if prompt_template is string)
+            provider: LLM provider to use ("google" or "together_ai")
+            model: Specific model to use (overrides default)
+            temperature: Temperature for generation (overrides default)
+            max_tokens: Max tokens for generation (overrides default)
             
         Returns:
-            Generated text as string
+            Generated text response
         """
-        # Format the template into a string prompt
-        formatted_prompt = prompt_template.format(**kwargs)
         
-        # Use the _call method to generate response
-        return self._call(formatted_prompt)
+        # Call appropriate provider
+        if provider.lower() == "google":
+            return self._call_google_ai(prompt, model, temperature, max_tokens)
+        elif provider.lower() == "together_ai":
+            return self._call_together_ai(prompt, model, temperature, max_tokens)
+        else:
+            raise ValueError(f"Unsupported provider: {provider}. Use 'google' or 'together_ai'")
