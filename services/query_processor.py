@@ -8,7 +8,7 @@ def process_query(query: str, doc_types: list, retriever_type: str, retriever_pa
     results = rag_service.search_documents(query, retriever_type, retriever_params, 
                                          doc_types, start_year, end_year, max_results)
     sources_formatted = "\n\n".join([
-        f"***Chunk {i+1}:***\n **Doc Title**:{source.metadata["doc_title"]} \n{source.content}" 
+        f"***Chunk {i+1}:*** \n **Doc Title**:{source.metadata['metadata']} \n{source.content}" 
         for i, source in enumerate(results.sources)
     ])
     
