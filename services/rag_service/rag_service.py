@@ -68,8 +68,6 @@ class RAGService:
         Returns:
             RAGResponse with answer and sources
         """
-        print("Loading The Env Variable.")
-        load_dotenv(r"C:\Users\carlf\Documents\GitHub\africai_website\.env")
 
         retriever = self._get_retriever(retriever_type, params, doc_types)
 

@@ -2,7 +2,8 @@ import os
 import requests
 import json
 from typing import Dict, Any, Optional
-
+import streamlit as st
+from dotenv import load_dotenv
 
 class LLMService:
     """
@@ -40,7 +41,13 @@ class LLMService:
         # API endpoints
         self.google_endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         self.together_endpoint = "https://api.together.xyz/v1/chat/completions"
-    
+    def get_env_variable(self, key: str) -> str:
+        """Return API key from st.secrets or dotenv depending on environment."""
+        if "STREAMLIT_CLOUD" in os.environ:
+            return st.secrets[key]
+        else:
+            load_dotenv(r"C:\Users\carlf\Documents\GitHub\africai_website\.env")
+            return os.getenv(key) # type: ignore
     
     def _call_google_ai(
         self, 
@@ -65,7 +72,7 @@ class LLMService:
                 "maxOutputTokens": max_tok
             }
         }
-        self.google_api_key = os.environ["GOOGLE_API_KEY"]
+        self.google_api_key = self.get_env_variable("GOOGLE_API_KEY")
         params = {"key": self.google_api_key}
         
         response = requests.post(url, headers=headers, json=payload, params=params)
@@ -90,7 +97,7 @@ class LLMService:
         model = model or self.default_together_model
         temp = temperature if temperature is not None else self.temperature
         max_tok = max_tokens or self.max_tokens
-        self.together_api_key = os.environ["TOGETHER_AI_API_KEY"]
+        self.together_api_key = self.get_env_variable("TOGETHER_AI_API_KEY")
         headers = {
             "Authorization": f"Bearer {self.together_api_key}",
             "Content-Type": "application/json"
