@@ -3,7 +3,7 @@ import requests
 import json
 from typing import Dict, Any, Optional
 import streamlit as st
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 class LLMService:
     """
@@ -46,7 +46,7 @@ class LLMService:
         if "STREAMLIT_CLOUD" in os.environ:
             return st.secrets[key]
         else:
-            load_dotenv(r"C:\Users\carlf\Documents\GitHub\africai_website\.env")
+            # load_dotenv(r"C:\Users\carlf\Documents\GitHub\africai_website\.env")
             return os.getenv(key) # type: ignore
     
     def _call_google_ai(

@@ -7,7 +7,7 @@ from .models import RAGResponse, SearchResult,RetrieverType, RetrieverConfig
 from .retrievers import FaissRetriever, LocalBM25Retriever, HybridRetriever, VectorSimilarityRetriever, BaseRetriever
 from langchain.embeddings import HuggingFaceEmbeddings
 from services.llm_service import LLMService
-from dotenv import load_dotenv
+
 EMBEDDINGS = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 class RAGService:

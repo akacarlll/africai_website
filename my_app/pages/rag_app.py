@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import streamlit as st
 import sys
 import os
@@ -7,7 +6,6 @@ from components.sidebar import sidebar_config
 from components.sidebar import sidebar_config
 from components.display import render_chat_history, append_message
 from services.query_processor import process_query
-load_dotenv(r"C:\Users\carlf\Documents\GitHub\africai_website\.env")
 # Page configuration
 st.set_page_config(
     page_title="AfricAI Legal IA",
