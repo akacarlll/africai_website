@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional
 import streamlit as st
 # from dotenv import load_dotenv
 
-class LLMService:
+class RagLLMService:
     """
     Unified interface for Google AI and Together AI models.
     Handles initialization, dynamic prompting, and flexible generation.

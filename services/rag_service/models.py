@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
 class DocumentType(Enum):
@@ -17,7 +17,6 @@ class   RetrieverType(Enum):
     ENSEMBLE = "ensemble_retriever"
     BM25 = "bm25"
     HYBRID = "hybrid"
-    DENSE_PASSAGE = "dense_passage"
     FAISS = "faiss_retriever"
     QDRANT = "qdrant_retriever"
     CHROMA = "chroma_retriever"
@@ -29,6 +28,7 @@ class SearchResult:
     relevance_score: float
     document_type: list[str]
     metadata: Dict[str, Any]
+    binary: Optional[bytes]= None
 
 @dataclass
 class RAGResponse:

@@ -3,10 +3,11 @@ RAG Service - Main orchestration for Retrieval-Augmented Generation
 """
 from langchain.prompts import PromptTemplate
 from typing import List, Dict, Any, Optional
-from .models import RAGResponse, SearchResult,RetrieverType, RetrieverConfig
-from .retrievers import FaissRetriever, LocalBM25Retriever, HybridRetriever, VectorSimilarityRetriever, BaseRetriever
+from ..rag_service.models import RetrieverConfig, RAGResponse, RetrieverType, SearchResult
+from .retrievers import FaissRetriever, LocalBM25Retriever, HybridRetriever, ChromaRetriever, BaseRetriever
 from langchain.embeddings import HuggingFaceEmbeddings
-from services.llm_service import LLMService
+from services.llm_service.rag.rag_llm_service import RagLLMService
+from services.document_service import DocumentFinder
 
 EMBEDDINGS = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
@@ -15,7 +16,7 @@ class RAGService:
     
     def __init__(self):
         """Initialize RAG service with vector DB and LLM connections"""
-        self.llm = LLMService()
+        self.llm = RagLLMService()
 
     def _get_retriever(self, retriever_type: str, params: Dict[str, Any], doc_types: List[str]) -> BaseRetriever:
         """Get and configure the appropriate retriever"""
@@ -29,8 +30,8 @@ class RAGService:
             params=params,
             document_types=doc_types # type: ignore
         )
-        if retriever_type == "vector_similarity":
-            retriever = VectorSimilarityRetriever(config)
+        if retriever_type == "chroma":
+            retriever = ChromaRetriever(config, embeddings=EMBEDDINGS)
         elif retriever_type == "bm25":
             retriever = LocalBM25Retriever(config)
         elif retriever_type == "hybrid":
@@ -39,11 +40,12 @@ class RAGService:
             retriever = FaissRetriever(config, embeddings=EMBEDDINGS)
         else:
             # Default to vector similarity
-            retriever = VectorSimilarityRetriever(config)
+            retriever = ChromaRetriever(config, embeddings=EMBEDDINGS)
         
 
         retriever.initialize_connection()
         return retriever
+    
     def search_documents(
         self, 
         query: str, 
@@ -53,8 +55,7 @@ class RAGService:
         start_year: Optional[int] = None,
         end_year: Optional[int] = None,
         max_results: int = 10
-    ):
-    # ) -> RAGResponse:
+    ) -> RAGResponse:
         """
         Main RAG pipeline: search + generate
         
@@ -74,7 +75,8 @@ class RAGService:
         search_results = self._vector_search(
             query, retriever, doc_types, start_year, end_year, max_results
         )
-
+        search_results = self._add_binary(search_results, doc_types)
+        
         answer = self._generate_answer(query, search_results)
         
         confidence = self._calculate_confidence(search_results)
@@ -152,8 +154,13 @@ class RAGService:
         - Provide a structured and clear response
 
         Answer:"""
-        return template.format(context=context, question=query)
-    
+        return template.format(context=context, question=query)  
+    def _add_binary(self, search_result:list[SearchResult], doc_types:list) -> list[SearchResult]:
+        if doc_types != ["Code"]:
+            print("doc has other type Code")
+            return search_result # TODO Change the input data so CSV have a source too, then change DocumentFinder class to add csv.
+        finder = DocumentFinder(search_result, num_of_docs=3)
+        return finder.enrich_search_result()   
 # Singleton instance
 _rag_service = None
 
@@ -163,3 +170,4 @@ def get_rag_service() -> RAGService:
     if _rag_service is None:
         _rag_service = RAGService()
     return _rag_service
+

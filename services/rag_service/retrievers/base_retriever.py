@@ -18,16 +18,3 @@ class BaseRetriever(ABC):
     def initialize_connection(self):
         """Initialize connection to vector database"""
         pass
-    def _create_placeholder_results(self, method: str, count: int) -> List[SearchResult]:
-        """Create placeholder results for testing"""
-        return [
-            SearchResult(
-                content=f"Sample legal document content from {method} search...",
-                document_title=f"Sample Document {i+1}",
-                relevance_score=0.9 - (i * 0.1),
-                document_type="Contract",
-                date="2023-01-15",
-                citation=f"Sample Citation {i+1}",
-                metadata={"jurisdiction": "Federal", "practice_area": "Commercial Law", "method": method}
-            ) for i in range(min(count, 3))
-        ]

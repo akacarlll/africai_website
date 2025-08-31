@@ -109,28 +109,6 @@ def get_retriever_sidebar_params(retriever_type: str):
             help="Floor value for IDF calculation to avoid negative scores"
         )
         
-    elif retriever_type == "dense_passage":
-        st.markdown("**Dense Passage Retrieval Parameters:**")
-        params["passage_overlap"] = st.slider(
-            "Passage Overlap", 
-            0, 100, 20, 5,
-            help="Character overlap between adjacent passages to maintain context continuity"
-        )
-        params["passage_length"] = st.slider(
-            "Passage Length", 
-            100, 1000, 500, 50,
-            help="Maximum characters per passage - shorter passages are more precise, longer ones provide more context"
-        )
-        params["min_passage_score"] = st.slider(
-            "Minimum Passage Score",
-            0.0, 1.0, 0.5, 0.05,
-            help="Minimum relevance score for passages to be included in results"
-        )
-        params["encoder_model"] = st.selectbox(
-            "Passage Encoder Model",
-            ["facebook/dpr-ctx_encoder-single-nq-base", "sentence-transformers/all-MiniLM-L6-v2"],
-            help="Model used to encode passages for dense retrieval"
-        )
     with st.expander("Current Parameters", expanded=False):
         st.json(params)
     
@@ -150,14 +128,13 @@ def sidebar_config():
         "chroma_retriever": "Chroma as Retriever - Open-source embedding database with built-in filtering",
         "qdrant_retriever": "Qdrant as Retriever - Vector search engine with advanced filtering and scalability",
         "bm25": "BM25 - Traditional keyword-based search with term frequency scoring",
-        "dense_passage": "Dense Passage - Retrieves specific document passages using dense representations"
     }
 
     retriever_display = st.selectbox(
         "Retriever Type",
         options=list(retriever_options.keys()),
         format_func=lambda x: retriever_options[x],
-        index=0,
+        index=1,
         help="Choose the retrieval method that best fits your search needs"
     )
 
@@ -197,13 +174,6 @@ def sidebar_config():
         - Strengths: Fast, precise for known terms and phrases
         - Use when: Searching for specific statutes, case names, or legal terms
         """,
-        "dense_passage": """
-        **Dense Passage Retrieval:**
-        - Retrieves specific document sections using dense representations
-        - Best for: Finding relevant passages within long documents
-        - Strengths: Good at finding specific clauses or sections
-        - Use when: Looking for particular contract clauses or case law sections
-        """
     }
 
     with st.expander(f"ℹ️ About {retriever_options[retriever_display]}", expanded=False):
@@ -219,7 +189,7 @@ def sidebar_config():
     with col2:
         end_year = st.number_input("To Year", value=2024, min_value=1970, max_value=2025)
 
-    max_results = st.slider("Max Results", min_value=5, max_value=50, value=10)
+    max_results = st.slider("Max Results", min_value=1, max_value=50, value=10)
     return {
         "doc_types": doc_types, 
         "retriever_type": retriever_type,
