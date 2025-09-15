@@ -3,7 +3,7 @@ import requests
 import json
 from typing import Dict, Any, Optional
 import streamlit as st
-# from dotenv import load_dotenv
+from streamlit.runtime.secrets import Secrets
 
 class RagLLMService:
     """
@@ -41,12 +41,11 @@ class RagLLMService:
         # API endpoints
         self.google_endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         self.together_endpoint = "https://api.together.xyz/v1/chat/completions"
-    def get_env_variable(self, key: str) -> str:
+    def get_env_variable(self, key: str) -> Secrets | str:
         """Return API key from st.secrets or dotenv depending on environment."""
         if "STREAMLIT_CLOUD" in os.environ:
             return st.secrets[key]
         else:
-            # load_dotenv(r"C:\Users\carlf\Documents\GitHub\africai_website\.env")
             return os.getenv(key) # type: ignore
     
     def _call_google_ai(
