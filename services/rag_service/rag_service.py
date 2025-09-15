@@ -4,10 +4,10 @@ RAG Service - Main orchestration for Retrieval-Augmented Generation
 from langchain.prompts import PromptTemplate
 from typing import List, Dict, Any, Optional
 from ..rag_service.models import RetrieverConfig, RAGResponse, RetrieverType, SearchResult
-from services.retriever_service import FaissRetriever, LocalBM25Retriever, HybridRetriever, ChromaRetriever, BaseRetriever
+from services.retriever_service import BaseRetriever
 from services.llm_service.rag.rag_llm_service import RagLLMService
 from services.document_service import DocumentFinder
-from utils.helpers import EMBEDDINGS
+from utils.helpers import RETRIEVER_REGISTRY
 
 class RAGService:
     """Main RAG orchestration service"""
@@ -19,27 +19,15 @@ class RAGService:
     def _get_retriever(self, retriever_type: str, params: Dict[str, Any], doc_types: List[str]) -> BaseRetriever:
         """Get and configure the appropriate retriever"""
         
-        # Convert document types
-        # document_types = [DocumentType(dt.lower().replace(" ", "_")) for dt in doc_types or []]
-        
 
         config = RetrieverConfig(
             type=RetrieverType(retriever_type),
             params=params,
             document_types=doc_types # type: ignore
         )
-        if retriever_type == "chroma":
-            retriever = ChromaRetriever(config, embeddings=EMBEDDINGS)
-        elif retriever_type == "bm25":
-            retriever = LocalBM25Retriever(config)
-        elif retriever_type == "hybrid":
-            retriever = HybridRetriever(config)
-        elif retriever_type == "faiss_retriever":
-            retriever = FaissRetriever(config, embeddings=EMBEDDINGS)
-        else:
-            # Default to vector similarity
-            retriever = ChromaRetriever(config, embeddings=EMBEDDINGS)
-        
+
+        retriever_cls = RETRIEVER_REGISTRY.get(retriever_type, RETRIEVER_REGISTRY["faiss_retriever"])
+        retriever = retriever_cls(config)
 
         retriever.initialize_connection()
         return retriever
