@@ -1,5 +1,8 @@
 import streamlit as st
 import time
+from .config.load_env_variable import init_env_variables
+
+init_env_variables()
 
 # Page configuration
 st.set_page_config(

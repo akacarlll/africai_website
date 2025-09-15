@@ -5,6 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')
 from components.sidebar import sidebar_config
 from components.display import render_chat_history, append_message
 from services.query_processor import process_query
+from config.load_env_variable import init_env_variables
 
 # Page configuration
 st.set_page_config(
@@ -177,6 +178,7 @@ def main():
 
 def check_environment():
     """Check if required environment variables are set"""
+    init_env_variables()
     required_vars = ["TOGETHER_AI_API_KEY", "GOOGLE_API_KEY"] 
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     
