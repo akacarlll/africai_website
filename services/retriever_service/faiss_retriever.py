@@ -1,3 +1,4 @@
+"""This module contains the FAISS retriever implementation."""
 from typing import Dict, Any, List, Optional
 from abc import ABC
 from langchain.vectorstores import FAISS
@@ -7,6 +8,8 @@ import numpy as np
 from .base_retriever import BaseRetriever
 from services.rag_service.models import RetrieverConfig, SearchResult
 from utils.helpers import DOC_TYPES_DICT
+from services.rag_service.models import RetrieverConfig
+
 class FaissRetriever(BaseRetriever):
     """
     FAISS retriever using LangChain's FAISS wrapper.
@@ -35,7 +38,7 @@ class FaissRetriever(BaseRetriever):
 
             self.vector_client = merged_faiss
 
-    def search(self, query: str, max_results: int, filters: Optional[Dict[str, Any]] = None) -> List[SearchResult]:
+    def search(self, query: str, max_results: int) -> List[SearchResult]:
         """Search using LangChain FAISS and return scored results."""
         if self.vector_client is None:
             raise RuntimeError("FAISS vector store not initialized. Call initialize_connection() first.")
@@ -51,3 +54,7 @@ class FaissRetriever(BaseRetriever):
                 document_type=self.config.document_types,
             ))
         return results
+    def as_langchain_retriever(self):
+        if self.vector_client is None:
+            raise RuntimeError("Vector store not initialized.")
+        return self.vector_client.as_retriever()

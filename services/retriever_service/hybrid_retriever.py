@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, List
 from .base_retriever import BaseRetriever
 from .bm25_retriever import BM25Retriever
-from .chroma_retriever import VectorSimilarityRetriever
+from .chroma_retriever import ChromaRetriever
 class HybridRetriever(BaseRetriever):
     """Hybrid retriever combining vector and keyword search"""
     
@@ -12,7 +12,7 @@ class HybridRetriever(BaseRetriever):
         vector_config = RetrieverConfig(RetrieverType.VECTOR_SIMILARITY, config.params, config.document_types)
         bm25_config = RetrieverConfig(RetrieverType.BM25, config.params, config.document_types)
         
-        self.vector_retriever = VectorSimilarityRetriever(vector_config)
+        self.vector_retriever = ChromaRetriever(vector_config)
         self.bm25_retriever = BM25Retriever(bm25_config)
     
     def initialize_connection(self):

@@ -1,3 +1,4 @@
+"""This module contains the BM25 retriever implementation."""
 from .base_retriever import BaseRetriever
 from typing import Dict, List, Any, Optional
 from services.rag_service.models import SearchResult, RetrieverConfig

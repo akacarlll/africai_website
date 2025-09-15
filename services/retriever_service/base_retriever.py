@@ -1,3 +1,4 @@
+"""This module contains the base class for all retrievers."""
 from services.rag_service.models import RetrieverConfig, SearchResult
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
