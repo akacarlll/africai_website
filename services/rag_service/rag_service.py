@@ -4,12 +4,10 @@ RAG Service - Main orchestration for Retrieval-Augmented Generation
 from langchain.prompts import PromptTemplate
 from typing import List, Dict, Any, Optional
 from ..rag_service.models import RetrieverConfig, RAGResponse, RetrieverType, SearchResult
-from .retrievers import FaissRetriever, LocalBM25Retriever, HybridRetriever, ChromaRetriever, BaseRetriever
-from langchain.embeddings import HuggingFaceEmbeddings
+from services.retriever_service import FaissRetriever, LocalBM25Retriever, HybridRetriever, ChromaRetriever, BaseRetriever
 from services.llm_service.rag.rag_llm_service import RagLLMService
 from services.document_service import DocumentFinder
-
-EMBEDDINGS = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+from utils.helpers import EMBEDDINGS
 
 class RAGService:
     """Main RAG orchestration service"""
@@ -161,6 +159,7 @@ class RAGService:
             return search_result # TODO Change the input data so CSV have a source too, then change DocumentFinder class to add csv.
         finder = DocumentFinder(search_result, num_of_docs=3)
         return finder.enrich_search_result()   
+    
 # Singleton instance
 _rag_service = None
 
